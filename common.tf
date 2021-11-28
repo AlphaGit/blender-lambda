@@ -22,7 +22,7 @@ resource "aws_iam_role" "lambda_exec" {
 
 data "aws_iam_policy_document" "lambda_policy_document" {
     statement {
-        sid = "RenderLambdaPolicy"
+        sid = "LambdaPolicyQueueAccess"
         actions = [
             "sqs:ReceiveMessage",
             "sqs:DeleteMessage",
@@ -32,6 +32,25 @@ data "aws_iam_policy_document" "lambda_policy_document" {
         ]
         resources = [
             aws_sqs_queue.queue.arn
+        ]
+    }
+
+    statement {
+        sid = "LambdaPolicyS3Access"
+        actions = [
+            "s3:GetObject",
+            "s3:PutObject",
+            "s3:DeleteObject",
+            "s3:ListBucket",
+            "s3:GetBucketLocation",
+            "s3:GetBucketPolicy",
+            "s3:GetBucketTagging",
+            "s3:GetBucketVersioning",
+            "s3:GetBucketWebsite",
+            "s3:GetLifecycleConfiguration",
+        ]
+        resources = [
+            aws_s3_bucket.lambda_bucket.arn
         ]
     }
 }

@@ -28,7 +28,8 @@ resource "aws_lambda_function" "consumer_lambda" {
 
     environment {
         variables = {
-            "QUEUE_NAME" = aws_sqs_queue.queue.name
+            "QUEUE_NAME" = aws_sqs_queue.queue.name,
+            "S3_BUCKET_NAME" = aws_s3_bucket.lambda_bucket.id,
         }
     }
 }
