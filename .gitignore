@@ -35,3 +35,6 @@ terraform.rc
 
 # Temporary location
 tmp/
+
+# Python virtual environment
+.venv/

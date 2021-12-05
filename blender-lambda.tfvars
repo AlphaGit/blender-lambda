@@ -8,6 +8,10 @@ producer_lambda_source_path = "./blender-lambda-producer"
 
 producer_invocation_route_key = "POST /render-job"
 
+producer_lambda_function_name = "blender-lambda-producer"
+
 consumer_lambda_source_path = "./blender-lambda-consumer"
+
+consumer_lambda_function_name = "blender-lambda-consumer"
 
 queue_name = "blender-lambda-queue"

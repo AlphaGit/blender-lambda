@@ -50,7 +50,8 @@ data "aws_iam_policy_document" "lambda_policy_document" {
             "s3:GetLifecycleConfiguration",
         ]
         resources = [
-            aws_s3_bucket.lambda_bucket.arn
+            aws_s3_bucket.lambda_bucket.arn,
+            format("%s%s", aws_s3_bucket.lambda_bucket.arn, "/*")
         ]
     }
 }
