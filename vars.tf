@@ -1,8 +1,26 @@
+variable "aws_account_id" {
+    description = "AWS Account ID"
+
+    type = string
+}
+
 variable "aws_region" {
     description = "AWS region for all resources"
 
     type = string
     default = "us-east-1"
+}
+
+variable "producer_ecr_repo" {
+    description = "ECR repository name for producer function"
+
+    type = string
+}
+
+variable "consumer_ecr_repo" {
+    description = "ECR repository name for consumer function"
+
+    type = string
 }
 
 variable "lambda_bucket" {
