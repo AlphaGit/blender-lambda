@@ -12,3 +12,8 @@ output "consumer_image_url" {
     description = "Image URL for the consumer Lambda function"
     value = aws_lambda_function.consumer_lambda.image_uri
 }
+
+output "producer_image_url" {
+    description = "Image URL for the producer Lambda function"
+    value = aws_lambda_function.producer_lambda.image_uri
+}

@@ -8,7 +8,7 @@ QUEUE_NAME = os.environ['QUEUE_NAME']
 S3_BUCKET_NAME = os.environ['S3_BUCKET_NAME']
 LOCAL_RENDER_FILE = '/tmp/render_file.blend'
 
-def lambda_handler(event, context):
+def handler(event, context):
     print('Starting producer lambda function')
     render_request = json.loads(event['body'])
 

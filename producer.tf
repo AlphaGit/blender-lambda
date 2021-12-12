@@ -1,29 +1,16 @@
-data "archive_file" "producer_lambda" {
-    type = "zip"
-    source_dir = var.producer_lambda_source_path
-    output_path = "${path.module}/tmp/producer_lambda.zip"
-}
+module "producer_docker_image" {
+    source = "terraform-aws-modules/lambda/aws//modules/docker-build"
 
-resource "aws_s3_bucket_object" "producer_lambda" {
-    bucket = aws_s3_bucket.lambda_bucket.id
-
-    key = "producer_lambda.zip"
-    source = data.archive_file.producer_lambda.output_path
-
-    etag = filemd5(data.archive_file.producer_lambda.output_path)
+    create_ecr_repo = true
+    ecr_repo = var.producer_ecr_repo
+    source_path = abspath(var.producer_lambda_source_path)
 }
 
 resource "aws_lambda_function" "producer_lambda" {
     function_name = var.producer_lambda_function_name
 
-    s3_bucket = aws_s3_bucket.lambda_bucket.id
-    s3_key = aws_s3_bucket_object.producer_lambda.key
-
-    runtime = var.producer_lambda_runtime
-    handler = var.producer_lambda_handler
-
-    source_code_hash = data.archive_file.producer_lambda.output_base64sha256
-
+    package_type = "Image"
+    image_uri = module.producer_docker_image.image_uri
     role = aws_iam_role.lambda_exec.arn
 
     environment {
