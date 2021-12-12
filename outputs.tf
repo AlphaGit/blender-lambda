@@ -7,3 +7,8 @@ output "public_url" {
     description = "Base URL for API Gateway Stage"
     value = aws_apigatewayv2_stage.lambda.invoke_url
 }
+
+output "consumer_image_url" {
+    description = "Image URL for the consumer Lambda function"
+    value = aws_lambda_function.consumer_lambda.image_uri
+}
