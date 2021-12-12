@@ -1,10 +1,15 @@
-FROM public.ecr.aws/lambda/python:3.8
+FROM nytimes/blender:2.93-cpu-ubuntu18.04
 
-COPY *.py ${LAMBDA_TASK_ROOT}
-COPY requirements.txt .
+ARG FUNCTION_DIR="/home/app"
+RUN mkdir -p $FUNCTION_DIR
+
+WORKDIR ${FUNCTION_DIR}
+COPY *.py ${FUNCTION_DIR}
 RUN chmod 755 $(find . -type d)
 RUN chmod 644 $(find . -type f)
 
-RUN pip3 install -r requirements.txt --target ${LAMBDA_TASK_ROOT}
+RUN pip install boto3
+RUN pip install awslambdaric --target ${FUNCTION_DIR}
 
+ENTRYPOINT [ "/bin/2.93/python/bin/python3.9", "-m", "awslambdaric" ]
 CMD [ "consumer_function.handler" ]
