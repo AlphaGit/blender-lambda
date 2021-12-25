@@ -1,10 +1,10 @@
 import json
 import os
 import boto3
-import logging
 
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 S3_BUCKET_NAME = os.environ['S3_BUCKET_NAME']
 LOCAL_RENDER_FILE = '/tmp/render_file.blend'

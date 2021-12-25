@@ -7,7 +7,7 @@ import boto3
 import re
 
 import logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 QUEUE_NAME = os.environ['QUEUE_NAME']
