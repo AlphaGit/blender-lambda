@@ -1,6 +1,6 @@
 # Blender on Lambda
 
-Render Blender on the distributed serverless cloud!
+Render Blender scenes on the distributed serverless cloud!
 
 This repository is based on the architecture laid out by [TAS-PC](https://github.com/AlphaGit/tas-pc).
 
