@@ -14,14 +14,14 @@ QUEUE_NAME = os.environ['QUEUE_NAME']
 S3_BUCKET_NAME = os.environ['S3_BUCKET_NAME']
 LOCAL_RENDER_FILE = '/tmp/render_file.blend'
 
-request_id = None
+s3_bucket = boto3.resource('s3').Bucket(S3_BUCKET_NAME)
+sqs_queue = boto3.resource('sqs').get_queue_by_name(QueueName=QUEUE_NAME)
 
 def handler(event, context):
     logger.info('Starting producer lambda function')
 
     try:
         render_request = json.loads(event['body'])
-        request_id = render_request['request_id']
         assert_request_is_valid(render_request)
     except Exception as exception:
         return get_response(status_code=400, body={ 'error': str(exception) })
@@ -30,8 +30,15 @@ def handler(event, context):
         file_name = render_request['file_name']
         retrieve_file_from_s3(file_name)
 
+        support_files = render_request['support_files'] if 'support_files' in render_request else []
+        for support_file in support_files:
+            check_s3_file_exists(support_file)
+
         (frame_start, frame_end) = get_frame_range(render_request)
-        queue_render_jobs(file_name, frame_start, frame_end)
+
+        queue_render_jobs(file_name, frame_start, frame_end, support_files)
+
+        logger.info(f'Finished producing lambda function')
 
         return get_response(body={
             'file_name': file_name,
@@ -63,22 +70,27 @@ def get_frame_range(render_request: dict) -> Tuple[int, int]:
     return frame_start, frame_end
 
 
-def queue_render_jobs(file_name, frame_start, frame_end):
-    sqs = boto3.resource('sqs')
-    queue = sqs.get_queue_by_name(QueueName=QUEUE_NAME)
+def queue_render_jobs(file_name, frame_start, frame_end, support_files):
     for frame in range(frame_start, frame_end + 1):
         message = json.dumps({
             'file_name': file_name,
-            'frame': frame
+            'frame': frame,
+            'support_files': support_files
         })
         logger.debug('Sending message to queue: ' + message)
-        queue.send_message(MessageBody=message)
+        sqs_queue.send_message(MessageBody=message)
+
+
+def check_s3_file_exists(file_name):
+    try:
+        s3_bucket.Object(file_name).load()
+    except Exception as exception:
+        raise Exception(f'File {file_name} does not exist in S3 bucket {S3_BUCKET_NAME}')
+    logger.info(f'File {file_name} exists in S3 bucket {S3_BUCKET_NAME}')
 
 
 def retrieve_file_from_s3(file_name):
-    s3 = boto3.resource('s3')
-    bucket = s3.Bucket(S3_BUCKET_NAME)
-    bucket.download_file(file_name, LOCAL_RENDER_FILE)
+    s3_bucket.download_file(file_name, LOCAL_RENDER_FILE)
 
 
 def assert_request_is_valid(render_request) -> Tuple[bool, str]:

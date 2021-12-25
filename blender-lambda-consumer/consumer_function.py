@@ -1,5 +1,4 @@
 import json
-import subprocess
 import os
 import boto3
 import logging
@@ -18,10 +17,11 @@ def handler(event, context):
 
         file_name = record['file_name']
         frame = record['frame']
+        support_files = record['support_files']
 
         logger.info(f'Received message for file: {file_name} and frame: {frame}')
 
-        retrieve_file_from_s3(file_name)
+        retrieve_files_from_s3(file_name, support_files)
 
         frame_str = str(frame).zfill(4)
         output_file = f'/tmp/rendered_{frame_str}.png'
@@ -43,7 +43,7 @@ def render_frame(frame, output_file):
     logger.info(f'Rendering frame: {frame} done')
 
 
-def retrieve_file_from_s3(file_name):
+def retrieve_files_from_s3(file_name, support_files):
     logger.info(f'Retrieving file: {file_name} from S3 bucket: {S3_BUCKET_NAME}')
 
     s3 = boto3.resource('s3')
@@ -51,6 +51,13 @@ def retrieve_file_from_s3(file_name):
     bucket.download_file(file_name, LOCAL_RENDER_FILE)
 
     logger.info(f'Retrieving file: {file_name} from S3 bucket: {S3_BUCKET_NAME} done')
+
+    for file in support_files:
+        logger.info(f'Retrieving file: {file} from S3 bucket: {S3_BUCKET_NAME}')
+
+        bucket.download_file(file, f'/tmp/{file}')
+
+        logger.info(f'Retrieving file: {file} from S3 bucket: {S3_BUCKET_NAME} done')
 
 
 def upload_file_to_s3(file_name):
