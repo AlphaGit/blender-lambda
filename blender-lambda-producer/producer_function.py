@@ -6,6 +6,10 @@ import subprocess
 import boto3
 import re
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 QUEUE_NAME = os.environ['QUEUE_NAME']
 S3_BUCKET_NAME = os.environ['S3_BUCKET_NAME']
 LOCAL_RENDER_FILE = '/tmp/render_file.blend'
@@ -13,7 +17,7 @@ LOCAL_RENDER_FILE = '/tmp/render_file.blend'
 request_id = None
 
 def handler(event, context):
-    print('Starting producer lambda function')
+    logger.info('Starting producer lambda function')
 
     try:
         render_request = json.loads(event['body'])
@@ -34,16 +38,16 @@ def handler(event, context):
             'jobs_queued': frame_end - frame_start + 1
         })
     except Exception as exception:
-        log(f'Exception: {exception}')
+        logger.exception(exception)
         return get_response(status_code=500, body={ 'error': str(exception) })
 
 
 def get_frame_range(render_request: dict) -> Tuple[int, int]:
-    log(f'Getting frame range from {LOCAL_RENDER_FILE}')
+    logger.info(f'Getting frame range from {LOCAL_RENDER_FILE}')
     proc = subprocess.Popen(['blender', '-b', LOCAL_RENDER_FILE, '-P', 'get_frames.py'], stdout=subprocess.PIPE)
     (out, err) = proc.communicate()
-    log(f'get_frames output: {out}')
-    log(f'get_frames error: {err}')
+    logger.debug(f'get_frames output: {out}')
+    logger.debug(f'get_frames error: {err}')
 
     matches = re.findall(r'\d+-\d+', out.decode('utf-8'))
     if len(matches) == 0:
@@ -67,7 +71,7 @@ def queue_render_jobs(file_name, frame_start, frame_end):
             'file_name': file_name,
             'frame': frame
         })
-        print('Sending message to queue: ' + message)
+        logger.debug('Sending message to queue: ' + message)
         queue.send_message(MessageBody=message)
 
 
@@ -78,7 +82,7 @@ def retrieve_file_from_s3(file_name):
 
 
 def assert_request_is_valid(render_request) -> Tuple[bool, str]:
-    log(f'Validating request {render_request}')
+    logger.debug(f'Validating request {render_request}')
 
     if 'file_name' not in render_request:
         raise TypeError("'file_name' parameter is missing")
@@ -97,7 +101,7 @@ def assert_request_is_valid(render_request) -> Tuple[bool, str]:
     if 'frame_start' in render_request and 'frame_end' in render_request and render_request['frame_start'] > render_request['frame_end']:
         raise ValueError('frame_start must be less than or equal to frame_end')
 
-    log('Request is valid.')
+    logger.debug('Request is valid.')
 
 
 def get_response(status_code = 200, body = {}, headers = { 'Content-Type': 'application/json' }):
@@ -106,8 +110,3 @@ def get_response(status_code = 200, body = {}, headers = { 'Content-Type': 'appl
         'body': json.dumps(body),
         'headers': headers
     }
-
-def log(message):
-    prefix = f'[{request_id}] ' if request_id else ''
-    print(f'{prefix}{message}')
-

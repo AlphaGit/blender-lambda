@@ -13,4 +13,3 @@ CMD [ "consumer_function.handler" ]
 COPY *.py ${FUNCTION_DIR}/
 RUN chmod 755 $(find . -type d) && \
     chmod 644 $(find . -type f)
-
