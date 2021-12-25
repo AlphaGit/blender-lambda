@@ -1,44 +1,62 @@
-# TAS PC
+# Blender on Lambda
 
-_Terraform-AWS Serverless Producer-Consumer Module_.
+Render Blender on the distributed serverless cloud!
 
-This repository uses Terraform to automatically create a Lambda infrastructure that produces events through an API Gateway powered lambda function, stores them in an AWS SQS queue and through event sources automatically fires consumer functions.
+This repository is based on the architecture laid out by [TAS-PC](https://github.com/AlphaGit/tas-pc).
 
-The lambdas also have optional access to a S3 bucket that can be used to store results.
+This repository aids in the following tasks:
 
-But one picture is worth a thousand words:
+- Setting up cloud infrastructure in AWS for rendering blender scenes
+- Executing multiple concurrent jobs for rendering each frame
+- Uploading and downloading scene and support files
+- Removing infrastructure
 
-![](architecture.jpg)
+## A few notes on the chosen architecture
+
+The infrastructure created is called Serverless, through an AWS service called Lambda functions. These are charged per-use, and have a monthly free tier that costs nothing to use. AWS Lambdas do not currently support GPU rendering, but are easily scaled to concurrent executions, saving time.
 
 ## How to use
 
-1. Clone this repository
-2. Adapt the variables in `vars.tf`,  or create your own `tfvars` file.
-3. Adapt your code from the base of `consumer_function/` and `producer_function/` python modules. (You don't need to use python.)
-3. `terraform init`
-4. `terraform apply`
-5. `./test.sh` to shoot a message and see it queued.
+1. Create an AWS Account.
+2. Download the AWS CLI. Install it and configure your credentials (`aws configure`).
+3. Download terraform.
+4. Clone this repository
+5. Create a `blender-lambda.tfvars` file for configuration. Use these values as startup, but modify them as you will.
+    ```tf
+    default_tags = {
+        "project" = "blender-lambda"
+    }
 
-## Demo
+    producer_api_gateway_name = "blender-lambda-api"
 
-```bash
-./test.sh
-```
+    producer_lambda_source_path = "./blender-lambda-producer"
 
-```json
-{
-  "MD5OfMessageBody": "c7bb08ef48366081a55037f8e0deef97",
-  "MessageId": "d48b8dc1-5e30-4681-9d48-1505f12a3740",
-  "ResponseMetadata": {
-    "RequestId": "82ec27b7-a468-5605-81e6-7da1ee2c2c40",
-    "HTTPStatusCode": 200,
-    "HTTPHeaders": {
-      "x-amzn-requestid": "82ec27b7-a468-5605-81e6-7da1ee2c2c40",
-      "date": "Tue, 23 Nov 2021 01:46:44 GMT",
-      "content-type": "text/xml",
-      "content-length": "378"
-    },
-    "RetryAttempts": 0
-  }
-}
-```
+    producer_invocation_route_key = "POST /render-job"
+
+    producer_lambda_function_name = "blender-lambda-producer"
+
+    producer_ecr_repo = "blender-lambda-producer"
+
+    consumer_lambda_source_path = "./blender-lambda-consumer"
+
+    consumer_lambda_function_name = "blender-lambda-consumer"
+
+    consumer_ecr_repo = "blender-lambda-consumer"
+
+    queue_name = "blender-lambda-queue"
+    ```
+6. Execute `./apply.sh` and accept the changes to have the infrastructure be created on your AWS account.
+7. Execute `./upload_files.sh <sceneFile> <file1> <file2> <file3>` to upload your files (the scene file and any supporting meadia files).
+8. Execute `./render.sh <sceneFile> <file1> <file2>...` to start the render job.
+9. Wait.
+10. Execute `./download_rendered.sh` to download the results of the render.
+11. Execute `./destroy.sh` to remove all the infrastructure from your AWS account.
+
+
+## More information
+
+This work is based on these previous investigations:
+
+- [TAS-PC](https://blog.alphasmanifesto.com/2021/11/22/tas-pc/)
+- [Rendering Blender Scenes in the cloud with AWS Lambda](https://blog.theodo.com/2021/08/blender-serverless-lambda/), by JR Beaudoin
+- [Blender-docker](https://github.com/nytimes/rd-blender-docker) by the NYTimes Research Team
