@@ -12,7 +12,7 @@ resource "aws_lambda_function" "producer_lambda" {
     package_type = "Image"
     image_uri = module.producer_docker_image.image_uri
     role = aws_iam_role.lambda_exec.arn
-    timeout = 60
+    timeout = 120
 
     environment {
         variables = {

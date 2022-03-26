@@ -93,8 +93,11 @@ def retrieve_file_from_s3(file_name):
     s3_bucket.download_file(file_name, LOCAL_RENDER_FILE)
 
 
-def assert_request_is_valid(render_request) -> Tuple[bool, str]:
+def assert_request_is_valid(render_request: dict) -> None:
     logger.debug(f'Validating request {render_request}')
+
+    if not isinstance(render_request, dict):
+        raise TypeError(f"data is not valid json, instead is {str(type(render_request))}")
 
     if 'file_name' not in render_request:
         raise TypeError("'file_name' parameter is missing")

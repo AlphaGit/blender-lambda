@@ -10,9 +10,10 @@ done
 SUPPORT_FILES_STRING="${SUPPORT_FILES_STRING%?} ]"
 
 PUBLIC_URL=$(terraform output -raw public_url)
+DATA='{ "file_name": "'$BLENDER_FILE'", "support_files": '$SUPPORT_FILES_STRING' }'
 
 curl -s \
-    -X POST \
-    -H "Content-Type: application/json" \
-    -d '{ "file_name": "'$BLENDER_FILE'", "request_id": "'$REQUEST_ID'", "support_files": '$SUPPORT_FILES_STRING' }' \
-    "$PUBLIC_URL/render-job" | jq
+     -X POST \
+     -H "Content-Type: application/json" \
+     -d "$DATA" \
+     "$PUBLIC_URL/render-job"
