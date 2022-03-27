@@ -1,10 +1,18 @@
-import json
-import os
 import boto3
-
+import json
 import logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+import os
+import sys
+
+# from https://gist.github.com/niranjv/fb95e716151642e8ca553b0e38dd152e
+logger = logging.getLogger()
+for h in logger.handlers:
+    logger.removeHandler(h)
+h = logging.StreamHandler(sys.stdout)
+FORMAT = '[%(levelname)s] %(message)s'
+h.setFormatter(logging.Formatter(FORMAT))
+logger.addHandler(h)
+logger.setLevel(logging.INFO)
 
 S3_BUCKET_NAME = os.environ['S3_BUCKET_NAME']
 LOCAL_RENDER_FILE = '/tmp/render_file.blend'

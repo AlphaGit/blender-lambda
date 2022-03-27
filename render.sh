@@ -10,7 +10,7 @@ done
 SUPPORT_FILES_STRING="${SUPPORT_FILES_STRING%?} ]"
 
 PUBLIC_URL=$(terraform output -raw public_url)
-DATA='{ "file_name": "'$BLENDER_FILE'", "support_files": '$SUPPORT_FILES_STRING' }'
+DATA='{ "file_name": "'$BLENDER_FILE'", "support_files": '$SUPPORT_FILES_STRING', "frame_start": 1, "frame_end": 165 }'
 
 curl -s \
      -X POST \

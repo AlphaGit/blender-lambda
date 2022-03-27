@@ -5,10 +5,18 @@ import os
 import subprocess
 import boto3
 import re
-
 import logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+import sys
+
+# from https://gist.github.com/niranjv/fb95e716151642e8ca553b0e38dd152e
+logger = logging.getLogger()
+for h in logger.handlers:
+    logger.removeHandler(h)
+h = logging.StreamHandler(sys.stdout)
+FORMAT = '[%(levelname)s] %(message)s'
+h.setFormatter(logging.Formatter(FORMAT))
+logger.addHandler(h)
+logger.setLevel(logging.INFO)
 
 QUEUE_NAME = os.environ['QUEUE_NAME']
 S3_BUCKET_NAME = os.environ['S3_BUCKET_NAME']
@@ -50,24 +58,24 @@ def handler(event, context):
 
 
 def get_frame_range(render_request: dict) -> Tuple[int, int]:
+    if 'frame_start' in render_request and 'frame_end' in render_request:
+        return (int(render_request['frame_start']), int(render_request['frame_end']))
+
     logger.info(f'Getting frame range from {LOCAL_RENDER_FILE}')
     proc = subprocess.Popen(['blender', '-b', LOCAL_RENDER_FILE, '-P', 'get_frames.py'], stdout=subprocess.PIPE)
     (out, err) = proc.communicate()
     logger.debug(f'get_frames output: {out}')
     logger.debug(f'get_frames error: {err}')
 
-    matches = re.findall(r'\d+-\d+', out.decode('utf-8'))
+    matches = re.findall(r'Frame range: (\d+-\d+)', out.decode('utf-8'))
     if len(matches) == 0:
-        raise Exception('No frame range found in file')
+        raise Exception('No frame range found in file, output found:' + out.decode('utf-8'))
     (file_frame_start, file_frame_end) = matches[0].split('-')
 
     if (not file_frame_start or not file_frame_end):
         raise Exception(f'Failed to get frame range from file.')
 
-    frame_start = render_request['frame_start'] if 'frame_start' in render_request else int(file_frame_start)
-    frame_end = render_request['frame_end'] if 'frame_end' in render_request else int(file_frame_end)
-
-    return frame_start, frame_end
+    return (int(file_frame_start), int(file_frame_end))
 
 
 def queue_render_jobs(file_name, frame_start, frame_end, support_files):
@@ -90,6 +98,7 @@ def check_s3_file_exists(file_name):
 
 
 def retrieve_file_from_s3(file_name):
+    logger.info(f'Retrieving file {file_name} from S3 bucket {S3_BUCKET_NAME} to {LOCAL_RENDER_FILE}')
     s3_bucket.download_file(file_name, LOCAL_RENDER_FILE)
 
 
