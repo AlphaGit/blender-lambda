@@ -74,5 +74,5 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_policy" {
 resource "aws_sqs_queue" "queue" {
     name = var.queue_name
 
-    visibility_timeout_seconds = 300
+    visibility_timeout_seconds = var.consumer_timeout_seconds
 }

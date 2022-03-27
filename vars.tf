@@ -119,3 +119,10 @@ variable "queue_name" {
     type = string
     default = "producer-consumer-queue"
 }
+
+variable "consumer_timeout_seconds" {
+    description = "Timeout for the consumer lambda"
+
+    type = number
+    default = 900
+}
