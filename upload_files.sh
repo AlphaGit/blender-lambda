@@ -1,4 +1,4 @@
 for file in "$@"
 do
-    upload_file.sh $file
+    ./upload_file.sh $file
 done
